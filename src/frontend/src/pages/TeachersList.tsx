@@ -25,7 +25,9 @@ const blankForm = {
   subject: "",
   classAssigned: "",
   phone: "",
+  email: "",
   accountNumber: "",
+  bankName: "",
   branchName: "",
   ifscCode: "",
   aadharNumber: "",
@@ -36,6 +38,12 @@ const blankForm = {
   joiningDate: "",
   fatherName: "",
   motherName: "",
+  address: "",
+  district: "",
+  state: "",
+  nationality: "Indian",
+  pinCode: "",
+  employeeId: "",
   active: true,
   photo: undefined as string | undefined,
 };
@@ -48,7 +56,7 @@ const labelStyle: React.CSSProperties = {
   marginBottom: 3,
 };
 
-const selectStyle: React.CSSProperties = {
+const inputStyle: React.CSSProperties = {
   width: "100%",
   padding: "7px 10px",
   borderRadius: 8,
@@ -109,11 +117,35 @@ export default function TeachersList() {
     "linear-gradient(135deg,#EF4444,#F87171)",
   ];
 
+  const addFields: [string, string, string][] = [
+    ["name", "Full Name *", "text"],
+    ["designation", "Designation", "text"],
+    ["qualification", "Qualification", "text"],
+    ["subject", "Subject", "text"],
+    ["classAssigned", "Class Assigned", "text"],
+    ["employeeId", "Employee ID", "text"],
+    ["phone", "Mobile Number", "text"],
+    ["email", "Email ID", "email"],
+    ["dob", "Date of Birth", "date"],
+    ["joiningDate", "Joining Date", "date"],
+    ["fatherName", "Father's Name", "text"],
+    ["motherName", "Mother's Name", "text"],
+    ["address", "Full Address", "text"],
+    ["district", "District", "text"],
+    ["state", "State", "text"],
+    ["pinCode", "PIN Code", "text"],
+    ["nationality", "Nationality", "text"],
+    ["aadharNumber", "Aadhar Number", "text"],
+    ["bankName", "Bank Name", "text"],
+    ["branchName", "Branch Name", "text"],
+    ["accountNumber", "Account Number", "text"],
+    ["ifscCode", "IFSC Code", "text"],
+  ];
+
   return (
     <div className="page">
       <Header title="Teachers" />
 
-      {/* Top bar */}
       <div
         style={{
           display: "flex",
@@ -163,7 +195,6 @@ export default function TeachersList() {
         </button>
       </div>
 
-      {/* Grid */}
       {filtered.length === 0 && (
         <div
           style={{ textAlign: "center", padding: "3rem", color: "#9CA3AF" }}
@@ -200,7 +231,6 @@ export default function TeachersList() {
               (e.currentTarget as HTMLDivElement).style.transform = "";
             }}
           >
-            {/* Status badge */}
             <span
               style={{
                 position: "absolute",
@@ -216,7 +246,6 @@ export default function TeachersList() {
             >
               {t.active ? "Active" : "Inactive"}
             </span>
-
             <div
               style={{
                 display: "flex",
@@ -226,7 +255,6 @@ export default function TeachersList() {
                 paddingBottom: "0.75rem",
               }}
             >
-              {/* Photo */}
               <div
                 style={{
                   width: 72,
@@ -258,7 +286,6 @@ export default function TeachersList() {
                   initials(t.name)
                 )}
               </div>
-
               <div
                 style={{
                   fontWeight: 700,
@@ -306,7 +333,6 @@ export default function TeachersList() {
                 <Phone size={12} />
                 {t.phone}
               </div>
-
               <div style={{ display: "flex", gap: "0.5rem" }}>
                 <button
                   type="button"
@@ -370,7 +396,7 @@ export default function TeachersList() {
               borderRadius: 16,
               padding: "1.5rem",
               width: "100%",
-              maxWidth: 640,
+              maxWidth: 680,
               boxShadow: "0 8px 40px rgba(0,0,0,0.18)",
             }}
           >
@@ -398,7 +424,6 @@ export default function TeachersList() {
                 <X size={20} color="#64748B" />
               </button>
             </div>
-
             <div
               style={{
                 display: "grid",
@@ -406,24 +431,7 @@ export default function TeachersList() {
                 gap: "0.75rem",
               }}
             >
-              {(
-                [
-                  ["name", "Full Name *", "text"],
-                  ["designation", "Designation", "text"],
-                  ["qualification", "Qualification", "text"],
-                  ["subject", "Subject", "text"],
-                  ["classAssigned", "Class Assigned", "text"],
-                  ["phone", "Mobile Number", "text"],
-                  ["dob", "Date of Birth", "date"],
-                  ["joiningDate", "Joining Date", "date"],
-                  ["fatherName", "Father's Name", "text"],
-                  ["motherName", "Mother's Name", "text"],
-                  ["accountNumber", "Account Number", "text"],
-                  ["branchName", "Branch Name", "text"],
-                  ["ifscCode", "IFSC Code", "text"],
-                  ["aadharNumber", "Aadhar Number", "text"],
-                ] as [string, string, string][]
-              ).map(([field, label, type]) => (
+              {addFields.map(([field, label, type]) => (
                 <div key={field}>
                   <label htmlFor={`add-${field}`} style={labelStyle}>
                     {label}
@@ -435,20 +443,11 @@ export default function TeachersList() {
                       (form as unknown as Record<string, string>)[field] || ""
                     }
                     onChange={(e) => handleFormChange(field, e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "7px 10px",
-                      borderRadius: 8,
-                      border: "1px solid #D1D5DB",
-                      fontSize: "0.88rem",
-                      boxSizing: "border-box",
-                      outline: "none",
-                    }}
+                    style={inputStyle}
                     data-ocid={`teachers.add_${field}.input`}
                   />
                 </div>
               ))}
-
               <div>
                 <label htmlFor="add-gender" style={labelStyle}>
                   Gender
@@ -457,7 +456,7 @@ export default function TeachersList() {
                   id="add-gender"
                   value={form.gender}
                   onChange={(e) => handleFormChange("gender", e.target.value)}
-                  style={selectStyle}
+                  style={inputStyle}
                   data-ocid="teachers.add_gender.select"
                 >
                   <option>Male</option>
@@ -465,7 +464,6 @@ export default function TeachersList() {
                   <option>Other</option>
                 </select>
               </div>
-
               <div>
                 <label htmlFor="add-caste" style={labelStyle}>
                   Caste
@@ -474,7 +472,7 @@ export default function TeachersList() {
                   id="add-caste"
                   value={form.caste}
                   onChange={(e) => handleFormChange("caste", e.target.value)}
-                  style={selectStyle}
+                  style={inputStyle}
                   data-ocid="teachers.add_caste.select"
                 >
                   <option>General</option>
@@ -483,7 +481,6 @@ export default function TeachersList() {
                   <option>ST</option>
                 </select>
               </div>
-
               <div>
                 <label htmlFor="add-marital" style={labelStyle}>
                   Marital Status
@@ -494,7 +491,7 @@ export default function TeachersList() {
                   onChange={(e) =>
                     handleFormChange("maritalStatus", e.target.value)
                   }
-                  style={selectStyle}
+                  style={inputStyle}
                   data-ocid="teachers.add_marital_status.select"
                 >
                   <option>Married</option>
@@ -502,7 +499,6 @@ export default function TeachersList() {
                 </select>
               </div>
             </div>
-
             <div
               style={{
                 display: "flex",

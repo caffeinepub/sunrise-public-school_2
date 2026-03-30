@@ -6,7 +6,9 @@ export interface Teacher {
   subject: string;
   classAssigned: string;
   phone: string;
+  email: string;
   accountNumber: string;
+  bankName: string;
   branchName: string;
   ifscCode: string;
   aadharNumber: string;
@@ -17,6 +19,12 @@ export interface Teacher {
   joiningDate: string;
   fatherName: string;
   motherName: string;
+  address: string;
+  district: string;
+  state: string;
+  nationality: string;
+  pinCode: string;
+  employeeId: string;
   active: boolean;
   photo?: string;
 }
@@ -30,7 +38,9 @@ export const sampleTeachers: Teacher[] = [
     subject: "Mathematics",
     classAssigned: "Class 5-A",
     phone: "9811001001",
+    email: "sunita.sharma@school.in",
     accountNumber: "35901234567890",
+    bankName: "State Bank of India",
     branchName: "SBI Main Branch, Lucknow",
     ifscCode: "SBIN0001234",
     aadharNumber: "2341 5678 9012",
@@ -41,6 +51,12 @@ export const sampleTeachers: Teacher[] = [
     joiningDate: "2010-07-01",
     fatherName: "Shri Ram Prasad Sharma",
     motherName: "Smt. Kamla Sharma",
+    address: "12, Civil Lines",
+    district: "Lucknow",
+    state: "Uttar Pradesh",
+    nationality: "Indian",
+    pinCode: "226001",
+    employeeId: "EMP001",
     active: true,
   },
   {
@@ -51,7 +67,9 @@ export const sampleTeachers: Teacher[] = [
     subject: "Science",
     classAssigned: "Class 8-B",
     phone: "9811001002",
+    email: "rajesh.verma@school.in",
     accountNumber: "12340056789012",
+    bankName: "Punjab National Bank",
     branchName: "PNB City Branch, Kanpur",
     ifscCode: "PUNB0056700",
     aadharNumber: "3456 7890 1234",
@@ -62,6 +80,12 @@ export const sampleTeachers: Teacher[] = [
     joiningDate: "2008-06-15",
     fatherName: "Shri Mahesh Verma",
     motherName: "Smt. Savitri Verma",
+    address: "45, Swaroop Nagar",
+    district: "Kanpur",
+    state: "Uttar Pradesh",
+    nationality: "Indian",
+    pinCode: "208002",
+    employeeId: "EMP002",
     active: true,
   },
   {
@@ -72,7 +96,9 @@ export const sampleTeachers: Teacher[] = [
     subject: "English",
     classAssigned: "Class 10-C",
     phone: "9811001003",
+    email: "priya.joshi@school.in",
     accountNumber: "50780012345678",
+    bankName: "Bank of Baroda",
     branchName: "Bank of Baroda, Varanasi",
     ifscCode: "BARB0VARASI",
     aadharNumber: "4567 8901 2345",
@@ -83,6 +109,12 @@ export const sampleTeachers: Teacher[] = [
     joiningDate: "2005-04-01",
     fatherName: "Shri Dinesh Joshi",
     motherName: "Smt. Rekha Joshi",
+    address: "78, Lanka Road",
+    district: "Varanasi",
+    state: "Uttar Pradesh",
+    nationality: "Indian",
+    pinCode: "221005",
+    employeeId: "EMP003",
     active: true,
   },
   {
@@ -93,7 +125,9 @@ export const sampleTeachers: Teacher[] = [
     subject: "Hindi",
     classAssigned: "Class 5-A",
     phone: "9811001004",
+    email: "anil.tiwari@school.in",
     accountNumber: "20100098765432",
+    bankName: "Allahabad Bank",
     branchName: "Allahabad Bank, Agra",
     ifscCode: "ALLA0210034",
     aadharNumber: "5678 9012 3456",
@@ -104,6 +138,12 @@ export const sampleTeachers: Teacher[] = [
     joiningDate: "2016-07-01",
     fatherName: "Shri Suresh Tiwari",
     motherName: "Smt. Geeta Tiwari",
+    address: "33, Fatehabad Road",
+    district: "Agra",
+    state: "Uttar Pradesh",
+    nationality: "Indian",
+    pinCode: "282001",
+    employeeId: "EMP004",
     active: false,
   },
   {
@@ -114,7 +154,9 @@ export const sampleTeachers: Teacher[] = [
     subject: "Social Studies",
     classAssigned: "Class 8-B",
     phone: "9811001005",
+    email: "kavita.rai@school.in",
     accountNumber: "60310056781234",
+    bankName: "Union Bank of India",
     branchName: "Union Bank, Prayagraj",
     ifscCode: "UBIN0560310",
     aadharNumber: "6789 0123 4567",
@@ -125,6 +167,12 @@ export const sampleTeachers: Teacher[] = [
     joiningDate: "2012-01-15",
     fatherName: "Shri Vinod Rai",
     motherName: "Smt. Usha Rai",
+    address: "5, Civil Lines",
+    district: "Prayagraj",
+    state: "Uttar Pradesh",
+    nationality: "Indian",
+    pinCode: "211001",
+    employeeId: "EMP005",
     active: true,
   },
 ];
@@ -134,7 +182,20 @@ const STORAGE_KEY = "school_teachers";
 export function getTeachers(): Teacher[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as Teacher[];
+    if (raw) {
+      const parsed = JSON.parse(raw) as Teacher[];
+      return parsed.map((t) => ({
+        ...t,
+        email: t.email ?? "",
+        address: t.address ?? "",
+        district: t.district ?? "",
+        state: t.state ?? "",
+        nationality: t.nationality ?? "Indian",
+        pinCode: t.pinCode ?? "",
+        employeeId: t.employeeId ?? "",
+        bankName: t.bankName ?? "",
+      }));
+    }
   } catch {
     // ignore
   }

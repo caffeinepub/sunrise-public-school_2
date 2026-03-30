@@ -4,6 +4,8 @@ import {
   Bell,
   Download,
   Eye,
+  Key,
+  Lock,
   Phone,
   PlusCircle,
   ShieldCheck,
@@ -109,6 +111,12 @@ export default function AdminPanel() {
     useState<Announcement[]>(initialAnnouncements);
   const [newTitle, setNewTitle] = useState("");
   const [newText, setNewText] = useState("");
+  const [showPinChange, setShowPinChange] = useState(false);
+  const [oldPin, setOldPin] = useState("");
+  const [newPin, setNewPin] = useState("");
+  const [confirmPin, setConfirmPin] = useState("");
+  const [pinChangeMsg, setPinChangeMsg] = useState("");
+  const [pinChangeError, setPinChangeError] = useState("");
 
   const totalStudents = sampleStudents.length;
   const totalClasses = sampleClasses.length;
@@ -624,6 +632,269 @@ export default function AdminPanel() {
         >
           <Download size={16} /> Download Data Backup (Excel)
         </button>
+      </div>
+
+      {/* Excel Template Customize */}
+      <div className="card">
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            marginBottom: "1rem",
+          }}
+        >
+          <Lock size={18} color="#D97706" />
+          <h2 className="card-title" style={{ margin: 0 }}>
+            Excel Template Customize Karen (Admin Control)
+          </h2>
+        </div>
+        <p
+          style={{ color: "#6B7280", fontSize: "0.9rem", marginBottom: "1rem" }}
+        >
+          Result Excel template ke columns yahan se customize karein. Yeh sirf
+          admin control kar sakta hai.
+        </p>
+
+        {/* PIN Management */}
+        <div
+          style={{
+            background: "#FFFBEB",
+            border: "1.5px solid #FDE68A",
+            borderRadius: 10,
+            padding: "1rem",
+            marginBottom: "1rem",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 8,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <Key size={16} color="#D97706" />
+              <span style={{ fontWeight: 600, color: "#92400E" }}>
+                Admin PIN:
+              </span>
+              <span style={{ letterSpacing: 4, color: "#92400E" }}>
+                ••••••••
+              </span>
+            </div>
+            <button
+              type="button"
+              data-ocid="admin.template.pin_change.button"
+              onClick={() => {
+                setShowPinChange(!showPinChange);
+                setPinChangeMsg("");
+                setPinChangeError("");
+                setOldPin("");
+                setNewPin("");
+                setConfirmPin("");
+              }}
+              style={{
+                padding: "0.4rem 0.9rem",
+                borderRadius: 7,
+                border: "1.5px solid #D97706",
+                background: "#fff",
+                color: "#92400E",
+                fontWeight: 600,
+                cursor: "pointer",
+                fontSize: "0.85rem",
+              }}
+            >
+              PIN Change Karen
+            </button>
+          </div>
+
+          {showPinChange && (
+            <div
+              style={{
+                marginTop: "1rem",
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+              }}
+            >
+              <input
+                type="password"
+                placeholder="Purana PIN"
+                value={oldPin}
+                onChange={(e) => setOldPin(e.target.value)}
+                data-ocid="admin.template.old_pin.input"
+                style={{
+                  padding: "0.5rem 0.75rem",
+                  borderRadius: 7,
+                  border: "1px solid #D1D5DB",
+                  fontSize: "0.9rem",
+                }}
+              />
+              <input
+                type="password"
+                placeholder="Naya PIN"
+                value={newPin}
+                onChange={(e) => setNewPin(e.target.value)}
+                data-ocid="admin.template.new_pin.input"
+                style={{
+                  padding: "0.5rem 0.75rem",
+                  borderRadius: 7,
+                  border: "1px solid #D1D5DB",
+                  fontSize: "0.9rem",
+                }}
+              />
+              <input
+                type="password"
+                placeholder="Naya PIN Confirm Karen"
+                value={confirmPin}
+                onChange={(e) => setConfirmPin(e.target.value)}
+                data-ocid="admin.template.confirm_pin.input"
+                style={{
+                  padding: "0.5rem 0.75rem",
+                  borderRadius: 7,
+                  border: "1px solid #D1D5DB",
+                  fontSize: "0.9rem",
+                }}
+              />
+              {pinChangeError && (
+                <p
+                  data-ocid="admin.template.pin_change.error_state"
+                  style={{ color: "#EF4444", fontSize: "0.85rem", margin: 0 }}
+                >
+                  {pinChangeError}
+                </p>
+              )}
+              {pinChangeMsg && (
+                <p
+                  data-ocid="admin.template.pin_change.success_state"
+                  style={{ color: "#16A34A", fontSize: "0.85rem", margin: 0 }}
+                >
+                  {pinChangeMsg}
+                </p>
+              )}
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  type="button"
+                  data-ocid="admin.template.pin_change.save_button"
+                  onClick={() => {
+                    setPinChangeError("");
+                    setPinChangeMsg("");
+                    const storedPin =
+                      localStorage.getItem("adminPIN") || "admin123";
+                    if (oldPin !== storedPin) {
+                      setPinChangeError("Purana PIN galat hai.");
+                      return;
+                    }
+                    if (newPin.length < 4) {
+                      setPinChangeError(
+                        "Naya PIN kam se kam 4 characters ka hona chahiye.",
+                      );
+                      return;
+                    }
+                    if (newPin !== confirmPin) {
+                      setPinChangeError(
+                        "Naya PIN aur Confirm PIN match nahi kar rahe.",
+                      );
+                      return;
+                    }
+                    localStorage.setItem("adminPIN", newPin);
+                    setPinChangeMsg("PIN successfully change ho gaya!");
+                    setOldPin("");
+                    setNewPin("");
+                    setConfirmPin("");
+                    setTimeout(() => {
+                      setShowPinChange(false);
+                      setPinChangeMsg("");
+                    }, 2000);
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: "0.5rem",
+                    borderRadius: 7,
+                    background: "#D97706",
+                    color: "#fff",
+                    border: "none",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  Save
+                </button>
+                <button
+                  type="button"
+                  data-ocid="admin.template.pin_change.cancel_button"
+                  onClick={() => setShowPinChange(false)}
+                  style={{
+                    padding: "0.5rem 1rem",
+                    borderRadius: 7,
+                    background: "#F3F4F6",
+                    color: "#374151",
+                    border: "1px solid #D1D5DB",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Navigate to Template Configure */}
+        <div
+          style={{
+            background: "#F0FDF4",
+            border: "1.5px solid #BBF7D0",
+            borderRadius: 10,
+            padding: "1rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
+          <div>
+            <p
+              style={{
+                margin: 0,
+                fontWeight: 600,
+                color: "#166534",
+                fontSize: "0.9rem",
+              }}
+            >
+              Template Columns Configure Karen
+            </p>
+            <p
+              style={{
+                margin: "0.2rem 0 0",
+                color: "#6B7280",
+                fontSize: "0.82rem",
+              }}
+            >
+              Results page par jaake template customize karein
+            </p>
+          </div>
+          <button
+            type="button"
+            data-ocid="admin.template.configure.button"
+            onClick={() => navigate({ to: "/results" })}
+            style={{
+              padding: "0.5rem 1rem",
+              borderRadius: 8,
+              border: "1.5px solid #16A34A",
+              background: "#fff",
+              color: "#166534",
+              fontWeight: 700,
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+              fontSize: "0.85rem",
+            }}
+          >
+            Results Page Kholen →
+          </button>
+        </div>
       </div>
 
       {/* Activity Log */}

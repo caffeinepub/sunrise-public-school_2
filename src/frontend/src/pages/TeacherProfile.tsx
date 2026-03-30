@@ -1,16 +1,5 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
-import {
-  ArrowLeft,
-  Banknote,
-  BookOpen,
-  Camera,
-  Edit3,
-  Lock,
-  Phone,
-  Printer,
-  User,
-  X,
-} from "lucide-react";
+import { ArrowLeft, Camera, Edit3, Printer, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Header } from "../components/Header";
 import {
@@ -19,36 +8,6 @@ import {
   updateTeacher,
 } from "../data/teacherData";
 
-function InfoRow({ label, value }: { label: string; value?: string }) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        gap: "0.5rem",
-        padding: "0.5rem 0",
-        borderBottom: "1px solid #F1F5F9",
-        alignItems: "flex-start",
-      }}
-    >
-      <span
-        style={{
-          color: "#64748B",
-          fontSize: "0.82rem",
-          fontWeight: 600,
-          minWidth: 160,
-          flexShrink: 0,
-          paddingTop: 2,
-        }}
-      >
-        {label}
-      </span>
-      <span style={{ color: "#1E293B", fontSize: "0.9rem", flex: 1 }}>
-        {value || "—"}
-      </span>
-    </div>
-  );
-}
-
 const blankForm: Omit<Teacher, "id"> = {
   name: "",
   designation: "",
@@ -56,7 +15,9 @@ const blankForm: Omit<Teacher, "id"> = {
   subject: "",
   classAssigned: "",
   phone: "",
+  email: "",
   accountNumber: "",
+  bankName: "",
   branchName: "",
   ifscCode: "",
   aadharNumber: "",
@@ -67,6 +28,12 @@ const blankForm: Omit<Teacher, "id"> = {
   joiningDate: "",
   fatherName: "",
   motherName: "",
+  address: "",
+  district: "",
+  state: "",
+  nationality: "Indian",
+  pinCode: "",
+  employeeId: "",
   active: true,
   photo: undefined,
 };
@@ -79,7 +46,7 @@ const labelStyle: React.CSSProperties = {
   marginBottom: 3,
 };
 
-const selectStyle: React.CSSProperties = {
+const inputStyle: React.CSSProperties = {
   width: "100%",
   padding: "7px 10px",
   borderRadius: 8,
@@ -88,6 +55,69 @@ const selectStyle: React.CSSProperties = {
   boxSizing: "border-box",
   outline: "none",
 };
+
+function Row({ label, value }: { label: string; value?: string }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "flex-start",
+        padding: "5px 0",
+        borderBottom: "1px solid #e2e8f0",
+      }}
+    >
+      <span
+        style={{
+          fontWeight: 700,
+          fontSize: "0.82rem",
+          color: "#1e3a5f",
+          minWidth: 160,
+          flexShrink: 0,
+        }}
+      >
+        {label}
+      </span>
+      <span style={{ color: "#374151", fontSize: "0.82rem" }}>
+        : {value || "—"}
+      </span>
+    </div>
+  );
+}
+
+function SectionHeader({
+  icon,
+  title,
+  sub,
+  color,
+}: { icon: string; title: string; sub: string; color: string }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        marginBottom: 10,
+        paddingBottom: 6,
+        borderBottom: `2px solid ${color}`,
+      }}
+    >
+      <span style={{ fontSize: "1.4rem" }}>{icon}</span>
+      <div>
+        <div
+          style={{
+            fontWeight: 800,
+            fontSize: "0.85rem",
+            color: "#1e3a5f",
+            lineHeight: 1.1,
+          }}
+        >
+          {title}
+        </div>
+        <div style={{ fontWeight: 700, fontSize: "0.75rem", color }}>{sub}</div>
+      </div>
+    </div>
+  );
+}
 
 export default function TeacherProfile() {
   const params = useParams({ strict: false }) as { teacherId?: string };
@@ -158,12 +188,30 @@ export default function TeacherProfile() {
     reader.readAsDataURL(file);
   }
 
-  const initials = teacher.name
-    .split(" ")
-    .filter((w) => /^[A-Za-z]/.test(w))
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("");
+  const textFields: [keyof Omit<Teacher, "id">, string, string][] = [
+    ["name", "Full Name", "text"],
+    ["designation", "Designation (Pad)", "text"],
+    ["qualification", "Qualification", "text"],
+    ["subject", "Subject", "text"],
+    ["classAssigned", "Class Assigned", "text"],
+    ["employeeId", "Employee ID", "text"],
+    ["phone", "Mobile Number", "text"],
+    ["email", "Email ID", "email"],
+    ["address", "Full Address", "text"],
+    ["district", "District (Zila)", "text"],
+    ["state", "State (Rajya)", "text"],
+    ["pinCode", "PIN Code", "text"],
+    ["dob", "Date of Birth", "date"],
+    ["joiningDate", "Joining Date", "date"],
+    ["fatherName", "Father's Name", "text"],
+    ["motherName", "Mother's Name", "text"],
+    ["nationality", "Nationality", "text"],
+    ["aadharNumber", "Aadhar Number", "text"],
+    ["bankName", "Bank Name", "text"],
+    ["branchName", "Branch Name", "text"],
+    ["accountNumber", "Account Number", "text"],
+    ["ifscCode", "IFSC Code", "text"],
+  ];
 
   return (
     <div className="page">
@@ -174,7 +222,7 @@ export default function TeacherProfile() {
         style={{
           display: "flex",
           gap: "0.75rem",
-          marginBottom: "1.5rem",
+          marginBottom: "1.25rem",
           flexWrap: "wrap",
           alignItems: "center",
         }}
@@ -184,300 +232,349 @@ export default function TeacherProfile() {
           type="button"
           className="btn-secondary"
           style={{ display: "flex", alignItems: "center", gap: 6 }}
-          onClick={() => navigate({ to: "/admin" })}
-          data-ocid="teacher_profile.back_button"
+          onClick={() => navigate({ to: "/teachers" })}
         >
-          <ArrowLeft size={15} /> Back to Admin
+          <ArrowLeft size={15} /> Back to Teachers
         </button>
         <button
           type="button"
           className="btn-primary"
           style={{ display: "flex", alignItems: "center", gap: 6 }}
           onClick={openEdit}
-          data-ocid="teacher_profile.edit_button"
         >
-          <Edit3 size={15} /> Edit Profile
+          <Edit3 size={15} /> Edit / Customize
         </button>
         <button
           type="button"
           className="btn-secondary"
           style={{ display: "flex", alignItems: "center", gap: 6 }}
           onClick={() => window.print()}
-          data-ocid="teacher_profile.print_button"
         >
           <Printer size={15} /> Print
         </button>
         <button
           type="button"
-          className={teacher.active ? "btn-secondary" : "btn-primary"}
           style={{
             display: "flex",
             alignItems: "center",
             gap: 6,
-            background: teacher.active ? "#FEE2E2" : undefined,
-            color: teacher.active ? "#DC2626" : undefined,
+            padding: "6px 14px",
+            borderRadius: 8,
+            border: "none",
+            cursor: "pointer",
+            fontWeight: 600,
+            fontSize: "0.85rem",
+            background: teacher.active ? "#FEE2E2" : "#DCFCE7",
+            color: teacher.active ? "#DC2626" : "#16A34A",
           }}
           onClick={toggleActive}
-          data-ocid="teacher_profile.toggle"
         >
           {teacher.active ? "Mark Inactive" : "Mark Active"}
         </button>
       </div>
 
-      {/* Profile Header Card */}
+      {/* ===== PROFILE CARD (matches uploaded format) ===== */}
       <div
-        className="card"
         style={{
-          marginBottom: "1.5rem",
-          display: "flex",
-          gap: "1.5rem",
-          alignItems: "center",
-          flexWrap: "wrap",
+          background: "#fff",
+          border: "1px solid #cbd5e1",
+          borderRadius: 10,
+          overflow: "hidden",
+          maxWidth: 960,
+          margin: "0 auto",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
         }}
       >
-        {/* Photo via label */}
-        <div style={{ position: "relative", flexShrink: 0 }}>
-          <label
-            htmlFor="profile-photo-input"
-            style={{ cursor: "pointer", display: "block" }}
-            title="Click to change photo"
+        {/* Top title bar */}
+        <div
+          style={{
+            background: "linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%)",
+            padding: "14px 24px",
+            textAlign: "center",
+          }}
+        >
+          <div
+            style={{
+              color: "#fff",
+              fontWeight: 900,
+              fontSize: "1.35rem",
+              letterSpacing: 1,
+            }}
           >
+            SHIKSHAK PROFILE / TEACHER PROFILE
+          </div>
+        </div>
+
+        {/* Photo + Name row */}
+        <div
+          style={{
+            background: "#eaf3fb",
+            display: "flex",
+            alignItems: "center",
+            gap: 0,
+            borderBottom: "none",
+          }}
+        >
+          {/* Photo box */}
+          <div style={{ padding: "18px 20px", flexShrink: 0 }}>
+            <div style={{ position: "relative", display: "inline-block" }}>
+              <div
+                style={{
+                  width: 110,
+                  height: 130,
+                  border: "2px solid #94a3b8",
+                  background: "#dbeafe",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  overflow: "hidden",
+                  borderRadius: 4,
+                }}
+              >
+                {teacher.photo ? (
+                  <img
+                    src={teacher.photo}
+                    alt={teacher.name}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
+                ) : (
+                  <div style={{ textAlign: "center", padding: "0 6px" }}>
+                    <div style={{ fontSize: "2.5rem", color: "#64748b" }}>
+                      👤
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "0.6rem",
+                        color: "#64748b",
+                        fontWeight: 600,
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      PAHCHAN PATRA PHOTO / PASSPORT SIZE PHOTO
+                    </div>
+                  </div>
+                )}
+              </div>
+              <label
+                htmlFor="profile-photo-input"
+                className="no-print"
+                style={{
+                  position: "absolute",
+                  bottom: 4,
+                  right: 4,
+                  background: "#2563eb",
+                  borderRadius: "50%",
+                  width: 24,
+                  height: 24,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  border: "2px solid #fff",
+                }}
+              >
+                <Camera size={12} color="#fff" />
+              </label>
+              <input
+                id="profile-photo-input"
+                ref={photoRef}
+                type="file"
+                accept="image/*"
+                style={{ display: "none" }}
+                onChange={handleProfilePhotoChange}
+              />
+            </div>
+          </div>
+
+          {/* Name + designation */}
+          <div style={{ flex: 1, padding: "18px 24px" }}>
             <div
               style={{
-                width: 100,
-                height: 100,
-                borderRadius: "50%",
-                overflow: "hidden",
-                border: "3px solid #E0E7FF",
-                background: "linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "2rem",
-                fontWeight: 700,
-                color: "#fff",
+                fontSize: "1.35rem",
+                fontWeight: 900,
+                color: "#1e3a5f",
+                lineHeight: 1.2,
               }}
             >
-              {teacher.photo ? (
-                <img
-                  src={teacher.photo}
-                  alt={teacher.name}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-              ) : (
-                initials
-              )}
+              SHIKSHAK KA NAAM: {teacher.name.toUpperCase()}
             </div>
-          </label>
-          <label
-            htmlFor="profile-photo-input"
-            className="no-print"
-            style={{
-              position: "absolute",
-              bottom: 4,
-              right: 4,
-              background: "#6366F1",
-              borderRadius: "50%",
-              width: 26,
-              height: 26,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-              border: "2px solid #fff",
-            }}
-          >
-            <Camera size={13} color="#fff" />
-          </label>
-          <input
-            id="profile-photo-input"
-            ref={photoRef}
-            type="file"
-            accept="image/*"
-            style={{ display: "none" }}
-            onChange={handleProfilePhotoChange}
-            data-ocid="teacher_profile.upload_button"
-          />
-        </div>
-
-        <div style={{ flex: 1, minWidth: 200 }}>
-          <h2
-            style={{
-              margin: 0,
-              fontSize: "1.4rem",
-              fontWeight: 700,
-              color: "#1E293B",
-            }}
-          >
-            {teacher.name}
-          </h2>
-          <div style={{ color: "#6366F1", fontWeight: 600, marginTop: 2 }}>
-            {teacher.designation}
-          </div>
-          <div style={{ color: "#64748B", fontSize: "0.88rem", marginTop: 2 }}>
-            {teacher.subject} &bull; {teacher.classAssigned}
-          </div>
-          <div style={{ marginTop: "0.5rem" }}>
-            <span
+            <div
               style={{
-                display: "inline-block",
-                padding: "2px 12px",
-                borderRadius: 999,
-                fontSize: "0.78rem",
-                fontWeight: 600,
-                background: teacher.active ? "#DCFCE7" : "#FEE2E2",
-                color: teacher.active ? "#16A34A" : "#DC2626",
+                fontSize: "1.05rem",
+                fontWeight: 800,
+                color: "#1e3a5f",
+                marginTop: 6,
               }}
             >
-              {teacher.active ? "Active" : "Inactive"}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-          gap: "1.25rem",
-        }}
-      >
-        {/* Personal Info */}
-        <div className="card">
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              marginBottom: "0.75rem",
-            }}
-          >
-            <User size={16} color="#6366F1" />
-            <h3
-              style={{
-                margin: 0,
-                fontSize: "1rem",
-                fontWeight: 700,
-                color: "#1E293B",
-              }}
-            >
-              Personal Information
-            </h3>
-          </div>
-          <InfoRow label="Full Name" value={teacher.name} />
-          <InfoRow label="Date of Birth" value={teacher.dob} />
-          <InfoRow label="Gender" value={teacher.gender} />
-          <InfoRow label="Caste" value={teacher.caste} />
-          <InfoRow label="Marital Status" value={teacher.maritalStatus} />
-          <InfoRow label="Father's Name" value={teacher.fatherName} />
-          <InfoRow label="Mother's Name" value={teacher.motherName} />
-        </div>
-
-        {/* Professional Info */}
-        <div className="card">
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              marginBottom: "0.75rem",
-            }}
-          >
-            <BookOpen size={16} color="#10B981" />
-            <h3
-              style={{
-                margin: 0,
-                fontSize: "1rem",
-                fontWeight: 700,
-                color: "#1E293B",
-              }}
-            >
-              Professional Information
-            </h3>
-          </div>
-          <InfoRow label="Designation" value={teacher.designation} />
-          <InfoRow label="Qualification" value={teacher.qualification} />
-          <InfoRow label="Subject" value={teacher.subject} />
-          <InfoRow label="Class Assigned" value={teacher.classAssigned} />
-          <InfoRow label="Joining Date" value={teacher.joiningDate} />
-          <div
-            style={{
-              display: "flex",
-              gap: "0.5rem",
-              padding: "0.5rem 0",
-              alignItems: "center",
-            }}
-          >
-            <Phone size={13} color="#64748B" />
-            <span
-              style={{ color: "#64748B", fontSize: "0.82rem", fontWeight: 600 }}
-            >
-              Mobile:
-            </span>
-            <span style={{ color: "#1E293B", fontSize: "0.9rem" }}>
-              {teacher.phone}
-            </span>
+              PAD: {teacher.designation.toUpperCase()}
+            </div>
+            <div style={{ marginTop: 8 }}>
+              <span
+                style={{
+                  display: "inline-block",
+                  padding: "2px 14px",
+                  borderRadius: 999,
+                  fontSize: "0.75rem",
+                  fontWeight: 700,
+                  background: teacher.active ? "#DCFCE7" : "#FEE2E2",
+                  color: teacher.active ? "#16A34A" : "#DC2626",
+                }}
+              >
+                {teacher.active ? "Active" : "Inactive"}
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Bank & Identity */}
-        <div className="card" style={{ borderLeft: "4px solid #F59E0B" }}>
+        {/* Dark blue icon bar */}
+        <div
+          style={{
+            background: "#1e3a5f",
+            padding: "8px 20px",
+            display: "flex",
+            alignItems: "center",
+            gap: 16,
+          }}
+        >
+          <span style={{ color: "#fff", fontSize: "1rem" }}>🪪</span>
+          <span style={{ color: "#94a3b8", fontSize: "0.9rem" }}>|</span>
+          <span style={{ color: "#fff", fontSize: "1rem" }}>✉️</span>
+          <span style={{ color: "#94a3b8", fontSize: "0.9rem" }}>|</span>
+          <span style={{ color: "#fff", fontSize: "1rem" }}>👤</span>
+        </div>
+
+        {/* 3-column info grid */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr 1fr",
+            gap: 0,
+            background: "#fff",
+          }}
+        >
+          {/* Column 1: Personal Info */}
           <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              marginBottom: "0.5rem",
-            }}
+            style={{ padding: "16px 18px", borderRight: "1px solid #e2e8f0" }}
           >
-            <Banknote size={16} color="#F59E0B" />
-            <h3
+            <SectionHeader
+              icon="📚"
+              title="VYAKTI-GAT JANKARI"
+              sub="PERSONAL INFO"
+              color="#2563eb"
+            />
+            <Row
+              label="Father's Name (Pita Ka Naam)"
+              value={teacher.fatherName}
+            />
+            <Row label="DOB (Janm Tithi)" value={teacher.dob} />
+            <Row label="Gender (Ling)" value={teacher.gender} />
+            <Row
+              label="Marital Status (Vivahit Sthiti)"
+              value={teacher.maritalStatus}
+            />
+            <Row label="Caste/Category (Jati/Varg)" value={teacher.caste} />
+            <Row
+              label="Nationality (Rashtriyata)"
+              value={teacher.nationality || "Indian"}
+            />
+            <Row label="Aadhar Number" value={teacher.aadharNumber} />
+          </div>
+
+          {/* Column 2: Contact & Address */}
+          <div
+            style={{ padding: "16px 18px", borderRight: "1px solid #e2e8f0" }}
+          >
+            <SectionHeader
+              icon="📍"
+              title="SAMHARK AUR PATA"
+              sub="CONTACT & ADDRESS"
+              color="#16a34a"
+            />
+            <Row label="Mobile Number" value={teacher.phone} />
+            <Row label="Email ID" value={teacher.email} />
+            <Row label="Full Address (Pura Pata)" value={teacher.address} />
+            <Row label="District (Zila)" value={teacher.district} />
+            <Row label="State (Rajya)" value={teacher.state} />
+            <Row label="PIN Code" value={teacher.pinCode} />
+          </div>
+
+          {/* Column 3: Job & Bank */}
+          <div style={{ padding: "16px 18px" }}>
+            <SectionHeader
+              icon="💰"
+              title="NUKRI AUR BANK DETAILS"
+              sub="JOB & BANK DETAILS"
+              color="#f59e0b"
+            />
+            <Row label="Designation (Pad)" value={teacher.designation} />
+            <Row label="Qualification" value={teacher.qualification} />
+            <Row
+              label="Joining Date (Niyukti Tithi)"
+              value={teacher.joiningDate}
+            />
+            <Row label="Employee ID" value={teacher.employeeId} />
+            {/* Bank sub-section */}
+            <div
               style={{
-                margin: 0,
-                fontSize: "1rem",
-                fontWeight: 700,
-                color: "#1E293B",
+                marginTop: 12,
+                paddingTop: 8,
+                borderTop: "2px solid #f59e0b",
               }}
             >
-              Bank & Identity Details
-            </h3>
-            <span
-              style={{
-                marginLeft: "auto",
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-                fontSize: "0.72rem",
-                color: "#F59E0B",
-                fontWeight: 600,
-              }}
-            >
-              <Lock size={11} /> Confidential
-            </span>
+              <div
+                style={{
+                  fontWeight: 800,
+                  fontSize: "0.8rem",
+                  color: "#1e3a5f",
+                  marginBottom: 6,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                <span>💰</span> BANK DETAILS
+              </div>
+              <Row label="Bank Name" value={teacher.bankName} />
+              <Row label="Branch Name" value={teacher.branchName} />
+              <Row label="Account Number" value={teacher.accountNumber} />
+              <Row label="IFSC Code" value={teacher.ifscCode} />
+            </div>
           </div>
-          <div
+        </div>
+
+        {/* Footer */}
+        <div
+          style={{
+            background: "linear-gradient(90deg, #1e3a5f 60%, #f59e0b 100%)",
+            padding: "8px 20px",
+            textAlign: "center",
+          }}
+        >
+          <span
             style={{
-              background: "#FFFBEB",
-              borderRadius: 8,
-              padding: "0.75rem",
-              border: "1px solid #FDE68A",
+              color: "#fff",
+              fontSize: "0.75rem",
+              fontWeight: 600,
+              letterSpacing: 1,
             }}
           >
-            <InfoRow label="Account Number" value={teacher.accountNumber} />
-            <InfoRow label="Branch Name" value={teacher.branchName} />
-            <InfoRow label="IFSC Code" value={teacher.ifscCode} />
-            <InfoRow label="Aadhar Number" value={teacher.aadharNumber} />
-          </div>
+            Sunrise Public School &mdash; Teacher Profile Card
+          </span>
         </div>
       </div>
 
-      {/* Edit Modal */}
+      {/* Edit / Customize Modal */}
       {editing && (
         <div
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(15,23,42,0.55)",
+            background: "rgba(15,23,42,0.6)",
             zIndex: 1000,
             display: "flex",
             alignItems: "flex-start",
@@ -485,7 +582,6 @@ export default function TeacherProfile() {
             overflowY: "auto",
             padding: "2rem 1rem",
           }}
-          data-ocid="teacher_profile.modal"
         >
           <div
             style={{
@@ -493,8 +589,8 @@ export default function TeacherProfile() {
               borderRadius: 16,
               padding: "1.5rem",
               width: "100%",
-              maxWidth: 640,
-              boxShadow: "0 8px 40px rgba(0,0,0,0.18)",
+              maxWidth: 700,
+              boxShadow: "0 8px 40px rgba(0,0,0,0.2)",
             }}
           >
             <div
@@ -506,7 +602,7 @@ export default function TeacherProfile() {
               }}
             >
               <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700 }}>
-                Edit Teacher Profile
+                Edit / Customize Teacher Profile
               </h3>
               <button
                 type="button"
@@ -516,7 +612,6 @@ export default function TeacherProfile() {
                   border: "none",
                   cursor: "pointer",
                 }}
-                data-ocid="teacher_profile.close_button"
               >
                 <X size={20} color="#64748B" />
               </button>
@@ -529,24 +624,7 @@ export default function TeacherProfile() {
                 gap: "0.75rem",
               }}
             >
-              {(
-                [
-                  ["name", "Full Name", "text"],
-                  ["designation", "Designation", "text"],
-                  ["qualification", "Qualification", "text"],
-                  ["subject", "Subject", "text"],
-                  ["classAssigned", "Class Assigned", "text"],
-                  ["phone", "Mobile Number", "text"],
-                  ["dob", "Date of Birth", "date"],
-                  ["joiningDate", "Joining Date", "date"],
-                  ["fatherName", "Father's Name", "text"],
-                  ["motherName", "Mother's Name", "text"],
-                  ["accountNumber", "Account Number", "text"],
-                  ["branchName", "Branch Name", "text"],
-                  ["ifscCode", "IFSC Code", "text"],
-                  ["aadharNumber", "Aadhar Number", "text"],
-                ] as [keyof Omit<Teacher, "id">, string, string][]
-              ).map(([field, label, type]) => (
+              {textFields.map(([field, label, type]) => (
                 <div key={field}>
                   <label htmlFor={`edit-${field}`} style={labelStyle}>
                     {label}
@@ -556,47 +634,35 @@ export default function TeacherProfile() {
                     type={type}
                     value={(form[field] as string) || ""}
                     onChange={(e) => handleFormChange(field, e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "7px 10px",
-                      borderRadius: 8,
-                      border: "1px solid #D1D5DB",
-                      fontSize: "0.88rem",
-                      boxSizing: "border-box",
-                      outline: "none",
-                    }}
-                    data-ocid={`teacher_profile.${field}.input`}
+                    style={inputStyle}
                   />
                 </div>
               ))}
 
               <div>
                 <label htmlFor="edit-gender" style={labelStyle}>
-                  Gender
+                  Gender (Ling)
                 </label>
                 <select
                   id="edit-gender"
                   value={form.gender}
                   onChange={(e) => handleFormChange("gender", e.target.value)}
-                  style={selectStyle}
-                  data-ocid="teacher_profile.gender.select"
+                  style={inputStyle}
                 >
                   <option>Male</option>
                   <option>Female</option>
                   <option>Other</option>
                 </select>
               </div>
-
               <div>
                 <label htmlFor="edit-caste" style={labelStyle}>
-                  Caste
+                  Caste (Jati/Varg)
                 </label>
                 <select
                   id="edit-caste"
                   value={form.caste}
                   onChange={(e) => handleFormChange("caste", e.target.value)}
-                  style={selectStyle}
-                  data-ocid="teacher_profile.caste.select"
+                  style={inputStyle}
                 >
                   <option>General</option>
                   <option>OBC</option>
@@ -604,10 +670,9 @@ export default function TeacherProfile() {
                   <option>ST</option>
                 </select>
               </div>
-
               <div>
                 <label htmlFor="edit-marital" style={labelStyle}>
-                  Marital Status
+                  Marital Status (Vivahit Sthiti)
                 </label>
                 <select
                   id="edit-marital"
@@ -615,8 +680,7 @@ export default function TeacherProfile() {
                   onChange={(e) =>
                     handleFormChange("maritalStatus", e.target.value)
                   }
-                  style={selectStyle}
-                  data-ocid="teacher_profile.marital_status.select"
+                  style={inputStyle}
                 >
                   <option>Married</option>
                   <option>Unmarried</option>
@@ -636,16 +700,10 @@ export default function TeacherProfile() {
                 type="button"
                 className="btn-secondary"
                 onClick={() => setEditing(false)}
-                data-ocid="teacher_profile.cancel_button"
               >
                 Cancel
               </button>
-              <button
-                type="button"
-                className="btn-primary"
-                onClick={saveEdit}
-                data-ocid="teacher_profile.save_button"
-              >
+              <button type="button" className="btn-primary" onClick={saveEdit}>
                 Save Changes
               </button>
             </div>
@@ -656,7 +714,8 @@ export default function TeacherProfile() {
       <style>{`
         @media print {
           .no-print { display: none !important; }
-          .sidebar, .main-content > *:first-child { display: none !important; }
+          .sidebar, header { display: none !important; }
+          .page { padding: 0 !important; }
         }
       `}</style>
     </div>
