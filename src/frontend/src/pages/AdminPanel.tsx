@@ -1,7 +1,9 @@
+import { useNavigate } from "@tanstack/react-router";
 import {
   Activity,
   Bell,
   Download,
+  Eye,
   Phone,
   PlusCircle,
   ShieldCheck,
@@ -12,59 +14,8 @@ import {
 import { useState } from "react";
 import { Header } from "../components/Header";
 import { sampleClasses, sampleFees, sampleStudents } from "../data/sampleData";
+import { type Teacher, getTeachers, saveTeachers } from "../data/teacherData";
 import { getSchoolSettings } from "./Settings";
-
-interface Teacher {
-  id: number;
-  name: string;
-  subject: string;
-  classAssigned: string;
-  phone: string;
-  active: boolean;
-}
-
-const initialTeachers: Teacher[] = [
-  {
-    id: 1,
-    name: "Mrs. Sunita Sharma",
-    subject: "Mathematics",
-    classAssigned: "Class 5-A",
-    phone: "9811001001",
-    active: true,
-  },
-  {
-    id: 2,
-    name: "Mr. Rajesh Verma",
-    subject: "Science",
-    classAssigned: "Class 8-B",
-    phone: "9811001002",
-    active: true,
-  },
-  {
-    id: 3,
-    name: "Mrs. Priya Joshi",
-    subject: "English",
-    classAssigned: "Class 10-C",
-    phone: "9811001003",
-    active: true,
-  },
-  {
-    id: 4,
-    name: "Mr. Anil Tiwari",
-    subject: "Hindi",
-    classAssigned: "Class 5-A",
-    phone: "9811001004",
-    active: false,
-  },
-  {
-    id: 5,
-    name: "Mrs. Kavita Rai",
-    subject: "Social Studies",
-    classAssigned: "Class 8-B",
-    phone: "9811001005",
-    active: true,
-  },
-];
 
 interface Announcement {
   id: number;
@@ -152,7 +103,8 @@ const activityLog = [
 ];
 
 export default function AdminPanel() {
-  const [teachers, setTeachers] = useState<Teacher[]>(initialTeachers);
+  const navigate = useNavigate();
+  const [teachers, setTeachers] = useState<Teacher[]>(() => getTeachers());
   const [announcements, setAnnouncements] =
     useState<Announcement[]>(initialAnnouncements);
   const [newTitle, setNewTitle] = useState("");
@@ -167,9 +119,11 @@ export default function AdminPanel() {
   const pendingCount = sampleFees.filter((f) => !f.isPaid).length;
 
   function toggleTeacher(id: number) {
-    setTeachers((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, active: !t.active } : t)),
+    const updated = teachers.map((t) =>
+      t.id === id ? { ...t, active: !t.active } : t,
     );
+    saveTeachers(updated);
+    setTeachers(updated);
   }
 
   function postAnnouncement() {
@@ -194,20 +148,122 @@ export default function AdminPanel() {
 
   function downloadBackup() {
     const settings = getSchoolSettings();
-    const data = {
-      settings,
-      sampleStudents,
-      sampleClasses,
-      sampleFees,
-      exportedAt: new Date().toISOString(),
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
-      type: "application/json",
-    });
+    const dateStr = new Date().toISOString().split("T")[0];
+
+    let html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets>`;
+
+    const sheets = ["School Info", "Students", "Classes", "Fees"];
+    for (const sheet of sheets) {
+      html += `<x:ExcelWorksheet><x:Name>${sheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet>`;
+    }
+    html +=
+      "</x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>";
+
+    html += `
+<table>
+  <tr><td colspan="2" style="font-weight:bold;font-size:14pt;background:#4F46E5;color:#fff">School Information</td></tr>
+  <tr><td style="font-weight:bold">School Name</td><td>${settings.name || ""}</td></tr>
+  <tr><td style="font-weight:bold">Principal</td><td>${settings.principal || ""}</td></tr>
+  <tr><td style="font-weight:bold">Mobile</td><td>${settings.phone || ""}</td></tr>
+  <tr><td style="font-weight:bold">Exported On</td><td>${new Date().toLocaleString()}</td></tr>
+</table>
+<br/>`;
+
+    html += `
+<table>
+  <tr><td colspan="9" style="font-weight:bold;font-size:14pt;background:#0F766E;color:#fff">Students Data</td></tr>
+  <tr style="background:#CCFBF1;font-weight:bold">
+    <td>#</td>
+    <td>Name</td>
+    <td>Roll No</td>
+    <td>Class</td>
+    <td>Date of Birth</td>
+    <td>Father Name</td>
+    <td>Mother Name</td>
+    <td>Phone</td>
+    <td>Address</td>
+  </tr>`;
+    for (let i = 0; i < sampleStudents.length; i++) {
+      const s = sampleStudents[i];
+      const cls = sampleClasses.find((c) => c.id === s.classId);
+      const clsName = cls ? `${cls.name}-${cls.section}` : "";
+      html += `
+  <tr style="background:${i % 2 === 0 ? "#F0FDFA" : "#fff"}">
+    <td>${i + 1}</td>
+    <td>${s.name}</td>
+    <td>${s.rollNo}</td>
+    <td>${clsName}</td>
+    <td>${s.dob}</td>
+    <td>${s.fatherName}</td>
+    <td>${s.motherName}</td>
+    <td>${s.phone}</td>
+    <td>${s.address}</td>
+  </tr>`;
+    }
+    html += "</table><br/>";
+
+    html += `
+<table>
+  <tr><td colspan="3" style="font-weight:bold;font-size:14pt;background:#92400E;color:#fff">Classes</td></tr>
+  <tr style="background:#FEF3C7;font-weight:bold">
+    <td>#</td>
+    <td>Class Name</td>
+    <td>Section</td>
+    <td>Total Students</td>
+  </tr>`;
+    for (let i = 0; i < sampleClasses.length; i++) {
+      const c = sampleClasses[i];
+      const count = sampleStudents.filter((s) => s.classId === c.id).length;
+      html += `
+  <tr style="background:${i % 2 === 0 ? "#FFFBEB" : "#fff"}">
+    <td>${i + 1}</td>
+    <td>${c.name}</td>
+    <td>${c.section}</td>
+    <td>${count}</td>
+  </tr>`;
+    }
+    html += "</table><br/>";
+
+    html += `
+<table>
+  <tr><td colspan="6" style="font-weight:bold;font-size:14pt;background:#7C3AED;color:#fff">Fees Data</td></tr>
+  <tr style="background:#EDE9FE;font-weight:bold">
+    <td>#</td>
+    <td>Student Name</td>
+    <td>Class</td>
+    <td>Fee Type</td>
+    <td>Total Due</td>
+    <td>Amount Paid</td>
+    <td>Status</td>
+  </tr>`;
+    for (let i = 0; i < sampleFees.length; i++) {
+      const f = sampleFees[i];
+      const student = sampleStudents.find((s) => s.id === f.studentId);
+      const cls = student
+        ? sampleClasses.find((c) => c.id === student.classId)
+        : null;
+      const clsName = cls ? `${cls.name}-${cls.section}` : "";
+      html += `
+  <tr style="background:${i % 2 === 0 ? "#F5F3FF" : "#fff"}">
+    <td>${i + 1}</td>
+    <td>${student?.name || ""}</td>
+    <td>${clsName}</td>
+    <td>${f.feeType}</td>
+    <td>${f.totalDue}</td>
+    <td>${f.amountPaid}</td>
+    <td>${f.isPaid ? "Paid" : "Pending"}</td>
+  </tr>`;
+    }
+    html += "</table>";
+
+    html += "</body></html>";
+
+    const blob = new Blob([html], { type: "application/vnd.ms-excel" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `school-backup-${new Date().toISOString().split("T")[0]}.json`;
+    a.download = `school-backup-${dateStr}.xls`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -264,12 +320,28 @@ export default function AdminPanel() {
             alignItems: "center",
             gap: "0.5rem",
             marginBottom: "1rem",
+            flexWrap: "wrap",
           }}
         >
           <UserCheck size={18} color="#6366F1" />
-          <h2 className="card-title" style={{ margin: 0 }}>
+          <h2 className="card-title" style={{ margin: 0, flex: 1 }}>
             Teacher / Staff Management
           </h2>
+          <button
+            type="button"
+            className="btn-primary"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 5,
+              padding: "5px 14px",
+              fontSize: "0.82rem",
+            }}
+            onClick={() => navigate({ to: "/teachers" })}
+            data-ocid="admin.teachers.open_modal_button"
+          >
+            <PlusCircle size={14} /> Manage Teachers
+          </button>
         </div>
         <div style={{ overflowX: "auto" }}>
           <table className="data-table" data-ocid="admin.teacher.table">
@@ -319,31 +391,57 @@ export default function AdminPanel() {
                     </span>
                   </td>
                   <td>
-                    <button
-                      type="button"
-                      className={t.active ? "btn-secondary" : "btn-primary"}
+                    <div
                       style={{
-                        padding: "4px 12px",
-                        fontSize: "0.8rem",
                         display: "flex",
-                        alignItems: "center",
-                        gap: 4,
+                        gap: "0.4rem",
+                        flexWrap: "wrap",
                       }}
-                      onClick={() => toggleTeacher(t.id)}
-                      data-ocid={`admin.teacher.toggle.${i + 1}`}
                     >
-                      {t.active ? (
-                        <>
-                          <UserX size={13} />
-                          Deactivate
-                        </>
-                      ) : (
-                        <>
-                          <UserCheck size={13} />
-                          Activate
-                        </>
-                      )}
-                    </button>
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        style={{
+                          padding: "4px 10px",
+                          fontSize: "0.78rem",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 4,
+                          background: "#EFF6FF",
+                          color: "#3B82F6",
+                          border: "1px solid #BFDBFE",
+                        }}
+                        onClick={() => navigate({ to: `/teacher/${t.id}` })}
+                        data-ocid={`admin.teacher.view_button.${i + 1}`}
+                      >
+                        <Eye size={12} /> View
+                      </button>
+                      <button
+                        type="button"
+                        className={t.active ? "btn-secondary" : "btn-primary"}
+                        style={{
+                          padding: "4px 10px",
+                          fontSize: "0.78rem",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 4,
+                        }}
+                        onClick={() => toggleTeacher(t.id)}
+                        data-ocid={`admin.teacher.toggle.${i + 1}`}
+                      >
+                        {t.active ? (
+                          <>
+                            <UserX size={12} />
+                            Deactivate
+                          </>
+                        ) : (
+                          <>
+                            <UserCheck size={12} />
+                            Activate
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -515,7 +613,7 @@ export default function AdminPanel() {
           style={{ color: "#6B7280", fontSize: "0.9rem", marginBottom: "1rem" }}
         >
           Export all school data including students, classes, fees, and settings
-          as a JSON file.
+          as an Excel file (.xls).
         </p>
         <button
           type="button"
@@ -524,7 +622,7 @@ export default function AdminPanel() {
           onClick={downloadBackup}
           data-ocid="admin.backup.download_button"
         >
-          <Download size={16} /> Download Data Backup (JSON)
+          <Download size={16} /> Download Data Backup (Excel)
         </button>
       </div>
 

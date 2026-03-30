@@ -12,6 +12,7 @@ import {
   Settings,
   ShieldCheck,
   Users,
+  Users2,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
@@ -21,6 +22,7 @@ const navItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/classes", label: "Classes", icon: GraduationCap },
   { to: "/students", label: "Students", icon: Users },
+  { to: "/teachers", label: "Teachers", icon: Users2 },
   { to: "/attendance", label: "Attendance", icon: ClipboardCheck },
   { to: "/results", label: "Results", icon: Award },
   { to: "/fees", label: "Fees", icon: CreditCard },

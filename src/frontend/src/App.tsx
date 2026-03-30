@@ -21,6 +21,8 @@ import Login from "./pages/Login";
 import Results from "./pages/Results";
 import Settings from "./pages/Settings";
 import Students from "./pages/Students";
+import TeacherProfile from "./pages/TeacherProfile";
+import TeachersList from "./pages/TeachersList";
 
 function AppLayout() {
   const { identity, isInitializing } = useInternetIdentity();
@@ -95,6 +97,16 @@ const adminRoute = createRoute({
   path: "/admin",
   component: AdminPanel,
 });
+const teachersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/teachers",
+  component: TeachersList,
+});
+const teacherProfileRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/teacher/$teacherId",
+  component: TeacherProfile,
+});
 
 const routeTree = rootRoute.addChildren([
   dashRoute,
@@ -106,6 +118,8 @@ const routeTree = rootRoute.addChildren([
   admitRoute,
   settingsRoute,
   adminRoute,
+  teachersRoute,
+  teacherProfileRoute,
 ]);
 const router = createRouter({ routeTree });
 

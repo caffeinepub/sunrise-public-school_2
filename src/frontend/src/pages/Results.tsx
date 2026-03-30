@@ -1,5 +1,14 @@
-import { Edit2, Plus, Printer, Trash2, X } from "lucide-react";
-import { useState } from "react";
+import {
+  Edit2,
+  FileSpreadsheet,
+  Plus,
+  Printer,
+  Trash2,
+  Upload,
+  X,
+} from "lucide-react";
+import { useRef, useState } from "react";
+import * as XLSX from "xlsx";
 import { Header } from "../components/Header";
 import { sampleClasses, sampleStudents } from "../data/sampleData";
 import { getSchoolSettings } from "./Settings";
@@ -114,6 +123,27 @@ export default function Results() {
   const [promotedTo, setPromotedTo] = useState("");
   const [reopenDate, setReopenDate] = useState("");
   const [showCustomize, setShowCustomize] = useState(false);
+  const [showImportExcel, setShowImportExcel] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importPreview, setImportPreview] = useState<Record<string, unknown>[]>(
+    [],
+  );
+  const [importError, setImportError] = useState("");
+  const [importSuccess, setImportSuccess] = useState("");
+  const [importedExtras, setImportedExtras] = useState<
+    Record<
+      number,
+      {
+        remark?: string;
+        sport?: string;
+        skill?: string;
+        computer?: string;
+        urdu_sanskrit?: string;
+        pt?: string;
+      }
+    >
+  >({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const students = sampleStudents.filter((s) => s.classId === classId);
   const cls = sampleClasses.find((c) => c.id === classId);
@@ -1130,6 +1160,486 @@ export default function Results() {
         </div>
       )}
 
+      {/* ===== IMPORT EXCEL MODAL ===== */}
+      {showImportExcel && (
+        // biome-ignore lint/a11y/useKeyWithClickEvents: modal overlay
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.5)",
+            zIndex: 1000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          onClick={() => setShowImportExcel(false)}
+          data-ocid="results.modal"
+        >
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 12,
+              padding: 28,
+              width: "min(700px, 95vw)",
+              maxHeight: "90vh",
+              overflowY: "auto",
+              boxShadow: "0 8px 40px rgba(0,0,0,0.18)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 16,
+              }}
+            >
+              <h3
+                style={{
+                  margin: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <FileSpreadsheet size={20} /> Excel se Result Import Karen
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowImportExcel(false)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: 20,
+                }}
+                data-ocid="results.close_button"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div
+              style={{
+                background: "#f0f7ff",
+                borderRadius: 8,
+                padding: 12,
+                marginBottom: 16,
+                fontSize: 13,
+                color: "#1a5276",
+              }}
+            >
+              <strong>📋 Excel File Format (Expected Columns):</strong>
+              <div style={{ marginTop: 6, lineHeight: 1.8 }}>
+                <strong>Roll Number</strong> (required) |{" "}
+                <strong>Subject</strong> (required) |{" "}
+                <strong>Half Yearly</strong> | <strong>Annual</strong> |{" "}
+                <strong>Maximum Marks</strong> | <strong>Obtain Marks</strong> |{" "}
+                <strong>Total</strong> | <strong>Grade</strong> |{" "}
+                <strong>Remark</strong> | <strong>Sport</strong> |{" "}
+                <strong>Skill</strong> | <strong>Computer</strong> |{" "}
+                <strong>Urdu/Sanskrit</strong> | <strong>PT</strong>
+              </div>
+              <div style={{ marginTop: 6, color: "#7d6608" }}>
+                ⚠️ Roll Number class ke students ke roll numbers se match karna
+                chahiye.
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                gap: 10,
+                marginBottom: 16,
+                flexWrap: "wrap",
+              }}
+            >
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => {
+                  const wsData = [
+                    [
+                      "Roll Number",
+                      "Subject",
+                      "Half Yearly",
+                      "Annual",
+                      "Maximum Marks",
+                      "Obtain Marks",
+                      "Total",
+                      "Grade",
+                      "Remark",
+                      "Sport",
+                      "Skill",
+                      "Computer",
+                      "Urdu/Sanskrit",
+                      "PT",
+                    ],
+                    ...students.map((s) => [
+                      s.rollNo,
+                      "HINDI",
+                      40,
+                      60,
+                      100,
+                      78,
+                      78,
+                      "B1",
+                      "Pass",
+                      "A",
+                      "B",
+                      85,
+                      72,
+                      "A",
+                    ]),
+                    ...students.map((s) => [
+                      s.rollNo,
+                      "ENGLISH",
+                      35,
+                      55,
+                      100,
+                      65,
+                      65,
+                      "B2",
+                      "Pass",
+                      "",
+                      "",
+                      "",
+                      "",
+                      "",
+                    ]),
+                    ...students.map((s) => [
+                      s.rollNo,
+                      "MATHS",
+                      45,
+                      70,
+                      100,
+                      88,
+                      88,
+                      "A2",
+                      "Excellent",
+                      "",
+                      "",
+                      "",
+                      "",
+                      "",
+                    ]),
+                  ];
+                  const wb = XLSX.utils.book_new();
+                  const ws = XLSX.utils.aoa_to_sheet(wsData);
+                  ws["!cols"] = wsData[0].map(() => ({ wch: 15 }));
+                  XLSX.utils.book_append_sheet(wb, ws, "Results");
+                  XLSX.writeFile(wb, "sample_result_template.xlsx");
+                }}
+                data-ocid="results.secondary_button"
+              >
+                📥 Sample Template Download Karen
+              </button>
+              <label
+                className="btn-primary"
+                style={{
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+                data-ocid="results.upload_button"
+              >
+                <Upload size={15} /> Excel File Choose Karen
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".xlsx,.xls"
+                  style={{ display: "none" }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setImportFile(file);
+                    setImportError("");
+                    setImportSuccess("");
+                    const reader = new FileReader();
+                    reader.onload = (evt) => {
+                      try {
+                        const data = new Uint8Array(
+                          evt.target?.result as ArrayBuffer,
+                        );
+                        const wb = XLSX.read(data, { type: "array" });
+                        const ws = wb.Sheets[wb.SheetNames[0]];
+                        const rows = XLSX.utils.sheet_to_json<
+                          Record<string, unknown>
+                        >(ws, { defval: "" });
+                        if (rows.length === 0) {
+                          setImportError("File mein koi data nahi mila.");
+                          return;
+                        }
+                        const required: string[] = ["Roll Number", "Subject"];
+                        const missing = required.filter(
+                          (c) => !(c in (rows[0] as object)),
+                        );
+                        if (missing.length > 0) {
+                          setImportError(
+                            `Required columns nahi milein: ${missing.join(", ")}`,
+                          );
+                          return;
+                        }
+                        setImportPreview(rows.slice(0, 10));
+                        setImportError("");
+                      } catch {
+                        setImportError(
+                          "File parse karne mein error aayi. Please valid .xlsx file use karein.",
+                        );
+                      }
+                    };
+                    reader.readAsArrayBuffer(file);
+                  }}
+                  data-ocid="results.input"
+                />
+              </label>
+            </div>
+
+            {importFile && (
+              <div style={{ marginBottom: 8, fontSize: 13, color: "#555" }}>
+                📄 Selected: <strong>{importFile.name}</strong>
+              </div>
+            )}
+
+            {importError && (
+              <div
+                style={{
+                  background: "#fdecea",
+                  border: "1px solid #e53935",
+                  borderRadius: 6,
+                  padding: 10,
+                  marginBottom: 12,
+                  color: "#c62828",
+                  fontSize: 13,
+                }}
+                data-ocid="results.error_state"
+              >
+                ❌ {importError}
+              </div>
+            )}
+            {importSuccess && (
+              <div
+                style={{
+                  background: "#e8f5e9",
+                  border: "1px solid #43a047",
+                  borderRadius: 6,
+                  padding: 10,
+                  marginBottom: 12,
+                  color: "#2e7d32",
+                  fontSize: 13,
+                }}
+                data-ocid="results.success_state"
+              >
+                ✅ {importSuccess}
+              </div>
+            )}
+
+            {importPreview.length > 0 && (
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontWeight: 600, marginBottom: 8, fontSize: 13 }}>
+                  Preview (first {importPreview.length} rows):
+                </div>
+                <div style={{ overflowX: "auto" }}>
+                  <table
+                    style={{
+                      borderCollapse: "collapse",
+                      width: "100%",
+                      fontSize: 12,
+                    }}
+                  >
+                    <thead>
+                      <tr style={{ background: "#f5f5f5" }}>
+                        {Object.keys(importPreview[0]).map((col) => (
+                          <th
+                            key={col}
+                            style={{
+                              border: "1px solid #ddd",
+                              padding: "4px 8px",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {col}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {importPreview.map((row) => (
+                        <tr
+                          key={(() => {
+                            const rk = "Roll Number";
+                            const sk = "Subject";
+                            return String(row[rk]) + String(row[sk]);
+                          })()}
+                        >
+                          {Object.entries(row).map(([colKey, val]) => (
+                            <td
+                              key={colKey}
+                              style={{
+                                border: "1px solid #ddd",
+                                padding: "4px 8px",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {String(val)}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: 10,
+                marginTop: 8,
+              }}
+            >
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setShowImportExcel(false)}
+                data-ocid="results.cancel_button"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-primary"
+                disabled={
+                  !importFile || importPreview.length === 0 || !!importError
+                }
+                onClick={() => {
+                  if (!importFile) return;
+                  const reader = new FileReader();
+                  reader.onload = (evt) => {
+                    try {
+                      const data = new Uint8Array(
+                        evt.target?.result as ArrayBuffer,
+                      );
+                      const wb = XLSX.read(data, { type: "array" });
+                      const ws = wb.Sheets[wb.SheetNames[0]];
+                      const rows = XLSX.utils.sheet_to_json<
+                        Record<string, unknown>
+                      >(ws, { defval: "" });
+
+                      const studentsByRoll: Record<
+                        number,
+                        (typeof students)[0]
+                      > = {};
+                      for (const s of students) studentsByRoll[s.rollNo] = s;
+
+                      const newResults: StudentResult[] = [
+                        ...results.filter(
+                          (r) => !students.some((s) => s.id === r.studentId),
+                        ),
+                      ];
+                      const newSubjects = [...subjects];
+                      const newExtras: Record<
+                        number,
+                        {
+                          remark?: string;
+                          sport?: string;
+                          skill?: string;
+                          computer?: string;
+                          urdu_sanskrit?: string;
+                          pt?: string;
+                        }
+                      > = { ...importedExtras };
+                      let unmatched = 0;
+
+                      for (const row of rows) {
+                        const rollNoKey = "Roll Number";
+                        const subjectKey = "Subject";
+                        const rollNo = Number(row[rollNoKey]);
+                        const subject = String(row[subjectKey] || "")
+                          .trim()
+                          .toUpperCase();
+                        if (!rollNo || !subject) continue;
+                        const student = studentsByRoll[rollNo];
+                        if (!student) {
+                          unmatched++;
+                          continue;
+                        }
+
+                        if (!newSubjects.includes(subject))
+                          newSubjects.push(subject);
+
+                        const halfYearlyKey = "Half Yearly";
+                        const annualKey = "Annual";
+                        const halfYearly = Number(row[halfYearlyKey] ?? 0);
+                        const annual = Number(row[annualKey] ?? 0);
+
+                        const existingIdx = newResults.findIndex(
+                          (r) =>
+                            r.studentId === student.id && r.subject === subject,
+                        );
+                        const marks: SubjectMarks = {
+                          fa1: 0,
+                          sa1: halfYearly,
+                          fa2: 0,
+                          fa3: 0,
+                          sa2: annual,
+                          acbw: 0,
+                        };
+                        if (existingIdx >= 0)
+                          newResults[existingIdx] = {
+                            studentId: student.id,
+                            subject,
+                            marks,
+                          };
+                        else
+                          newResults.push({
+                            studentId: student.id,
+                            subject,
+                            marks,
+                          });
+
+                        newExtras[student.id] = {
+                          ...newExtras[student.id],
+                          remark: String(row.Remark ?? ""),
+                          sport: String(row.Sport ?? ""),
+                          skill: String(row.Skill ?? ""),
+                          computer: String(row.Computer ?? ""),
+                          urdu_sanskrit: String(row["Urdu/Sanskrit"] ?? ""),
+                          pt: String(row.PT ?? ""),
+                        };
+                      }
+
+                      setResults(newResults);
+                      setSubjects(newSubjects);
+                      setImportedExtras(newExtras);
+                      setImportSuccess(
+                        `Import successful! ${rows.length} rows import kiye gaye.${unmatched > 0 ? ` ${unmatched} rows skip kiye gaye (roll number match nahi hua).` : ""}`,
+                      );
+                      setImportPreview([]);
+                      setImportFile(null);
+                    } catch {
+                      setImportError(
+                        "Import karte waqt error aayi. Please file check karein.",
+                      );
+                    }
+                  };
+                  reader.readAsArrayBuffer(importFile);
+                }}
+                data-ocid="results.confirm_button"
+              >
+                ✅ Import Confirm Karen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ===== SUBJECT EDITOR MODAL ===== */}
       {showSubjectEditor && (
         <div
@@ -1739,6 +2249,20 @@ export default function Results() {
             onClick={() => setShowSubjectEditor(true)}
           >
             <Plus size={16} /> Subjects
+          </button>
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={() => {
+              setShowImportExcel(true);
+              setImportFile(null);
+              setImportPreview([]);
+              setImportError("");
+              setImportSuccess("");
+            }}
+            data-ocid="results.open_modal_button"
+          >
+            <FileSpreadsheet size={16} /> Import Excel
           </button>
         </div>
         <div className="card">
