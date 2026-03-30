@@ -52,13 +52,46 @@ body {
   flex-direction: column;
   height: 100vh;
   flex-shrink: 0;
+  position: relative;
+  transition: width 0.3s ease;
+  overflow: visible;
+}
+.sidebar.collapsed {
+  width: 72px;
+}
+.sidebar-toggle {
+  position: absolute;
+  top: 20px;
+  right: -14px;
+  width: 28px;
+  height: 28px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  color: #334155;
+  transition: box-shadow 0.15s;
+}
+.sidebar-toggle:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 .sidebar-brand {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 24px 20px 20px;
+  padding: 20px 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+  min-height: 72px;
+}
+.sidebar.collapsed .sidebar-brand {
+  justify-content: center;
+  padding: 20px 0;
 }
 .brand-icon {
   width: 40px;
@@ -72,6 +105,11 @@ body {
   font-weight: 700;
   font-size: 20px;
   flex-shrink: 0;
+  overflow: hidden;
+}
+.brand-text {
+  overflow: hidden;
+  white-space: nowrap;
 }
 .brand-name {
   color: white;
@@ -85,11 +123,16 @@ body {
 }
 .sidebar-nav {
   flex: 1;
-  padding: 16px 12px;
+  padding: 12px 10px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   overflow-y: auto;
+  overflow-x: hidden;
+}
+.sidebar.collapsed .sidebar-nav {
+  padding: 12px 6px;
+  align-items: center;
 }
 .nav-item {
   display: flex;
@@ -102,6 +145,15 @@ body {
   font-size: 14px;
   transition: all 0.15s;
   position: relative;
+  border-left: 3px solid transparent;
+  white-space: nowrap;
+  overflow: hidden;
+  width: 100%;
+}
+.nav-item.collapsed {
+  justify-content: center;
+  padding: 10px;
+  width: 48px;
 }
 .nav-item:hover {
   background: var(--sidebar-hover);
@@ -110,6 +162,7 @@ body {
 .nav-item.active {
   background: var(--sidebar-hover);
   color: white;
+  border-left-color: #22c55e;
 }
 .active-badge {
   margin-left: auto;
@@ -123,7 +176,7 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 16px 24px;
+  padding: 16px 22px;
   color: var(--sidebar-text);
   background: none;
   border: none;
@@ -131,6 +184,12 @@ body {
   font-size: 14px;
   border-top: 1px solid rgba(255, 255, 255, 0.07);
   transition: color 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.sidebar-logout.collapsed {
+  justify-content: center;
+  padding: 16px 0;
 }
 .sidebar-logout:hover {
   color: var(--red);
@@ -737,4 +796,147 @@ body {
 }
 .print-only {
   display: none;
+}
+
+/* School Profile Panel */
+.nav-item-btn {
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+.school-profile-panel {
+  position: fixed;
+  left: 260px;
+  top: 0;
+  height: 100vh;
+  width: 280px;
+  background: #fff;
+  z-index: 200;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.school-profile-panel.open {
+  transform: translateX(0);
+}
+.school-profile-overlay {
+  position: fixed;
+  inset: 0;
+  left: 260px;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 199;
+}
+.spp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--accent);
+  color: white;
+  flex-shrink: 0;
+}
+.spp-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+.spp-close {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: white;
+  border-radius: 6px;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background 0.15s;
+}
+.spp-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+.spp-body {
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+.spp-logo-wrap {
+  margin-bottom: 14px;
+}
+.spp-logo-img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+}
+.spp-logo-avatar {
+  width: 80px;
+  height: 80px;
+  background: var(--accent);
+  color: white;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  font-weight: 700;
+}
+.spp-school-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+  text-align: center;
+  line-height: 1.3;
+  margin-bottom: 4px;
+}
+.spp-school-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.spp-divider {
+  width: 100%;
+  height: 1px;
+  background: var(--border);
+  margin: 16px 0;
+}
+.spp-info-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.spp-info-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--page-bg);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+.spp-info-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+  min-width: 90px;
+}
+.spp-info-value {
+  font-size: 13px;
+  color: var(--text-main);
+  font-weight: 600;
+  flex: 1;
+  word-break: break-all;
+}
+.spp-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
 }

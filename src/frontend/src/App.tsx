@@ -11,6 +11,7 @@ import { Sidebar } from "./components/Sidebar";
 import SplashScreen from "./components/SplashScreen";
 import { Toaster } from "./components/ui/sonner";
 import { useInternetIdentity } from "./hooks/useInternetIdentity";
+import AdminPanel from "./pages/AdminPanel";
 import AdmitCards from "./pages/AdmitCards";
 import Attendance from "./pages/Attendance";
 import Classes from "./pages/Classes";
@@ -89,6 +90,11 @@ const settingsRoute = createRoute({
   path: "/settings",
   component: Settings,
 });
+const adminRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/admin",
+  component: AdminPanel,
+});
 
 const routeTree = rootRoute.addChildren([
   dashRoute,
@@ -99,6 +105,7 @@ const routeTree = rootRoute.addChildren([
   feesRoute,
   admitRoute,
   settingsRoute,
+  adminRoute,
 ]);
 const router = createRouter({ routeTree });
 
